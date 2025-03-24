@@ -7,3 +7,4 @@ def update_params(parameters_dict: dict):
         new_value = float(input())
         parameters_dict[key] = new_value
     print("The new parameters is:",parameters_dict)
+    return parameters_dict
