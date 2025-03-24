@@ -3,7 +3,7 @@ from regex import pattern_for_params, pattern_for_variables
 
 def get_params_from_config():
     """ reading added working_config and get params from it """
-    with open("working_config.txt", "r", encoding="utf-8") as file:
+    with open("working_config.wbjn", "r", encoding="utf-8") as file:
         config = file.read()
 
     parameters_dict = {}
@@ -34,7 +34,7 @@ def create_new_config(config, parameters_dict):
     new_config = pattern_for_params.sub(replace_params, new_config)
 
 
-    with open("working_config.txt", "w", encoding="utf-8") as file:
+    with open("working_config.wbjn", "w", encoding="utf-8") as file:
         file.write(new_config)
 
     new_config = config

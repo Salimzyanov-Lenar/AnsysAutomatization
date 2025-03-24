@@ -28,7 +28,7 @@ class AppInterface:
                 working_config = file.read()
 
             # Save working_config
-            with open("working_config.txt", mode="w", encoding="utf-8") as file:
+            with open("working_config.wbjn", mode="w", encoding="utf-8") as file:
                 file.write(working_config)
 
             self.label.config(text=f"choosen:\n{file_path}")
@@ -77,7 +77,7 @@ class AppInterface:
         print(self.params)
 
         # update with the params config
-        with open("working_config.txt", "r", encoding="utf-8") as file:
+        with open("working_config.wbjn", "r", encoding="utf-8") as file:
             config = file.read()
 
         # Update config
