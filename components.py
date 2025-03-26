@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from services import get_params_from_config, create_new_config
+from executor import execute_with_updated_config
 
 
 class AppInterface:
@@ -83,3 +84,19 @@ class AppInterface:
         # Update config
         create_new_config(config, self.params)
         tk.messagebox.showinfo("Информация", "Параметры сохранены")
+        self.show_results()
+    
+    def show_results(self):
+        for widget in self.input_frame.winfo_children():
+            widget.destroy()
+
+        results = execute_with_updated_config()
+
+        if isinstance(results, dict):
+            row = 0
+            for key, value in results.items():
+                label = tk.Label(self.input_frame, text=f"{key}: {value}")
+                label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+                row += 1
+        else:
+            tk.messagebox.showerror("Ошибка", "Результаты не получены или имеют некорректный формат")
