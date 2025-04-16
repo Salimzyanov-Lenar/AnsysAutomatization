@@ -9,13 +9,46 @@ class AppInterface:
         # Windows settings
         self.root = root
         self.root.title("AnsysAutomatization")
-        self.root.geometry("720x480")
-        self.label = tk.Label(root, text="Выберите файл", font=('Arial', 12))
-        self.label.pack(pady=20)
-        self.button = tk.Button(root, text="Выберите файл", command=self.on_button_click)
-        self.button.pack()
+        self.root.geometry("1920x1080")
+
+        # Заголовок
+        self.label = tk.Label(root, text="Выберите конфигурационный файл и исполнительный файл Ansys",
+                              font=('Arial', 14, 'bold'), bg="#f4f4f4", fg="#333")
+        self.label.pack(pady=30)
+
+        # Кнопка конфигурационного файла
+        self.config_button = tk.Button(root, text="📄 Выберите файл конфигурации",
+                                       font=('Arial', 11), width=30,
+                                       command=self.on_button_click)
+        self.config_button.pack(pady=10)
+
+        # Путь до проекта
+        self.project_path_label = tk.Label(root, text="📁 Путь до проекта",
+                                           font=('Arial', 12), bg="#f4f4f4")
+        self.project_path_label.pack(pady=(30, 5))
+
+        self.project_button = tk.Button(root, text="Выбрать путь до проекта",
+                                        font=('Arial', 11), width=30,
+                                        command=self.get_project_path)
+        self.project_button.pack(pady=5)
+
+        # Путь до исполнителя
+        self.executor_path_label = tk.Label(root, text="⚙️ Путь до исполнителя",
+                                            font=('Arial', 12), bg="#f4f4f4")
+        self.executor_path_label.pack(pady=(30, 5))
+
+        self.executor_button = tk.Button(root, text="Выбрать исполнитель Ansys",
+                                         font=('Arial', 11), width=30,
+                                         command=self.get_executor_path)
+        self.executor_button.pack(pady=5)
+
+
         self.input_frame = tk.Frame(root)
         self.input_frame.pack(pady=20)
+
+        # App Setup parameters
+        self.ansys_executor_path = None
+        self.ansys_project_path = None
 
         # Config parameters dict
         self.params = dict | None
@@ -35,16 +68,40 @@ class AppInterface:
                 file.write(working_config)
 
             self.label.config(text=f"Выбран путь:\n{file_path}")
+            # E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe
 
             try:
                 self.params = get_params_from_config()
                 self.create_input_fields()
             except Exception as e:
                 tk.messagebox.showerror("Ошибка", str(e))
+        
+    def get_executor_path(self):
+        """ Saving path to executor """
+        file_path = filedialog.askopenfilename()
+        
+        if file_path:
+            self.ansys_executor_path = file_path
+            self.executor_path_label.config(text=f"Выбран путь:\n{file_path}")
+
+        else:
+            tk.messagebox.showerror("Ошибка, выберите валидный исполнительный файл Ansys")
+        print(self.ansys_executor_path)
+
+    def get_project_path(self):
+        """ Getting project path """
+        project_path = filedialog.askopenfilename()
+        if project_path:
+            self.ansys_project_path = project_path
+            self.project_path_label.config(text=f"Выбран путь:\n{project_path}")
+            
+        else:
+            tk.messagebox.showerror("Ошибка, выбери валидный путь до проекта")
 
 
     def create_input_fields(self):
         """ Creating a input fields which depending on config """
+        # E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
@@ -102,12 +159,18 @@ class AppInterface:
         self.show_results()
     
     def show_results(self):
+        if not self.ansys_executor_path:
+            tk.messagebox.showerror("Ошибка", "Выберите файл испонитель")
+            return
+        if not self.ansys_project_path:
+            tk.messagebox.showerror("Ошибка", "Выберите файл проекта")
+
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
         print(self.strength_limit)
+        results = execute_with_updated_config(self.ansys_executor_path, self.ansys_project_path)
 
-        results = execute_with_updated_config()
 
         print(results)
         

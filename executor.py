@@ -23,8 +23,11 @@ class Executor:
             print(f"Error {e}")
 
 
-def execute_with_updated_config():
-    executor = Executor(r"E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe", r"C:\Users\Lenar\AnsysProjects\pipe_3.wbpj")
+def execute_with_updated_config(ansys_executor_path, ansys_project_path):
+    # executor = Executor(r"E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe", r"C:\Users\Lenar\AnsysProjects\pipe_3.wbpj")
+    # executor = Executor(executor_path, r"C:\Users\Lenar\AnsysProjects\pipe_3.wbpj")
+    executor = Executor(ansys_executor_path, ansys_project_path)
+
     try:
         print("Start calculating")
         executor()
