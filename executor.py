@@ -45,7 +45,7 @@ def execute_with_updated_config():
             headers = data[1][0].split(',')
             values = data[2][0].split(',')
 
-            result = {headers[i]: values[i] for i in range(len(headers))}
+            result = {headers[i]: values[i] for i in range(2, len(headers))}
             return result
         
         return None
