@@ -1,54 +1,74 @@
 import tkinter as tk
+import styles
+from PIL import Image, ImageTk
+
+
 from tkinter import filedialog
 from services import get_params_from_config, create_new_config
 from executor import execute_with_updated_config
+from regex import pattern_for_saving_path
 
 
 class AppInterface:
     def __init__(self, root):
-        # Windows settings
+        # Main Frame Setup 
         self.root = root
         self.root.title("AnsysAutomatization")
         self.root.geometry("1920x1080")
+        self.root.configure(bg="white")
 
-        # Заголовок
-        self.label = tk.Label(root, text="Выберите конфигурационный файл и исполнительный файл Ansys",
-                              font=('Arial', 14, 'bold'), bg="#f4f4f4", fg="#333")
-        self.label.pack(pady=30)
 
-        # Кнопка конфигурационного файла
-        self.config_button = tk.Button(root, text="📄 Выберите файл конфигурации",
-                                       font=('Arial', 11), width=30,
-                                       command=self.on_button_click)
-        self.config_button.pack(pady=10)
+        # Left Frame
+        self.left_frame = tk.Frame(self.root, bg="#1729B0", width=200)
+        self.left_frame.pack(side="left", fill="y")
 
-        # Путь до проекта
-        self.project_path_label = tk.Label(root, text="📁 Путь до проекта",
-                                           font=('Arial', 12), bg="#f4f4f4")
-        self.project_path_label.pack(pady=(30, 5))
+        # Right Frame
+        self.right_frame = tk.Frame(self.root, bg="white")
+        self.right_frame.pack(side="left", fill="both", expand=True)
 
-        self.project_button = tk.Button(root, text="Выбрать путь до проекта",
-                                        font=('Arial', 11), width=30,
+        self.input_frame = tk.Frame(self.right_frame, bg="white")
+        self.input_frame.place(relx=0.5, rely=0.5, anchor="center")
+        
+        image = Image.open("static/pic.jpg")
+        photo = ImageTk.PhotoImage(image)
+
+        self.image_label = tk.Label(self.right_frame, image=photo, bg='white')
+        self.image_label.image = photo
+        self.image_label.pack(pady=100)
+
+        
+        # Welcome Label
+        self.label = tk.Label(
+            self.left_frame,
+        text="Добро пожаловать в программу для автоматизации создания и запуска журналов Ansys INC \n\n Для начала потребуется выбрать проект, журнал проекта и путь до исполнителя",
+            font=('Arial', 14, 'bold'),
+            bg="#1729B0",
+            fg="white",
+            justify="center",
+            pady=100,
+            wraplength=600,
+            )
+        self.label.pack(pady=(0, 200), anchor="w")
+
+        # Path to journal button 
+        self.config_button = tk.Button(self.left_frame, text="📄 Выберите файл конфигурации",
+                                        command=self.on_button_click)
+        # Path to project button
+        self.project_button = tk.Button(self.left_frame, text="📁 Выбрать путь до проекта",
                                         command=self.get_project_path)
-        self.project_button.pack(pady=5)
+        # Path to executor button
+        self.executor_button = tk.Button(self.left_frame, text="⚙ Выбрать исполнитель Ansys",
+                                        command=self.get_executor_path)
 
-        # Путь до исполнителя
-        self.executor_path_label = tk.Label(root, text="⚙️ Путь до исполнителя",
-                                            font=('Arial', 12), bg="#f4f4f4")
-        self.executor_path_label.pack(pady=(30, 5))
+        for btn in [self.config_button, self.project_button, self.executor_button]:
+            styles.choice_button_styles(btn)
+            btn.pack(fill="both", padx=10, pady=5)
 
-        self.executor_button = tk.Button(root, text="Выбрать исполнитель Ansys",
-                                         font=('Arial', 11), width=30,
-                                         command=self.get_executor_path)
-        self.executor_button.pack(pady=5)
-
-
-        self.input_frame = tk.Frame(root)
-        self.input_frame.pack(pady=20)
 
         # App Setup parameters
         self.ansys_executor_path = None
         self.ansys_project_path = None
+        self.ansys_result_path = None
 
         # Config parameters dict
         self.params = dict | None
@@ -67,9 +87,20 @@ class AppInterface:
             with open("working_config.wbjn", mode="w", encoding="utf-8") as file:
                 file.write(working_config)
 
-            self.label.config(text=f"Выбран путь:\n{file_path}")
-            # E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe
+            # Ищем путь к результату и сохраняем в self.ansys_result_path
+            print("Trying to get result path...")
+            match = pattern_for_saving_path.search(working_config)
+            if match:
+                self.ansys_result_path = match.group(1)
+                print(f"Result path is {self.ansys_result_path}")
+            else:
+                print("Error, result path was not found")
+                self.ansys_result_path = None
+            
+            if self.image_label:
+                self.image_label.destroy()
 
+            self.label.config(text=f"Выбран путь:\n{file_path}")
             try:
                 self.params = get_params_from_config()
                 self.create_input_fields()
@@ -82,7 +113,6 @@ class AppInterface:
         
         if file_path:
             self.ansys_executor_path = file_path
-            self.executor_path_label.config(text=f"Выбран путь:\n{file_path}")
 
         else:
             tk.messagebox.showerror("Ошибка, выберите валидный исполнительный файл Ansys")
@@ -93,7 +123,7 @@ class AppInterface:
         project_path = filedialog.askopenfilename()
         if project_path:
             self.ansys_project_path = project_path
-            self.project_path_label.config(text=f"Выбран путь:\n{project_path}")
+            self.label.config(text=f"Выбран путь:\n{project_path}")
             
         else:
             tk.messagebox.showerror("Ошибка, выбери валидный путь до проекта")
@@ -101,7 +131,6 @@ class AppInterface:
 
     def create_input_fields(self):
         """ Creating a input fields which depending on config """
-        # E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
@@ -114,10 +143,13 @@ class AppInterface:
 
         if isinstance(self.params, dict):
             for key, value in self.params.items():
+                # label = tk.Label(self.input_frame, text=key)
                 label = tk.Label(self.input_frame, text=key)
+                styles.label_style(label)
                 label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
 
                 entry = tk.Entry(self.input_frame)
+                styles.entry_style(entry)
                 entry.insert(0, str(value))
                 entry.grid(row=row, column=1, padx=10, pady=5, sticky="e")
 
@@ -126,14 +158,17 @@ class AppInterface:
 
             self.strength_label = tk.Label(self.input_frame, text="Предел прочности")
             self.strength_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+            styles.label_style(self.strength_label)
 
             self.strength_entry = tk.Entry(self.input_frame)
             self.strength_entry.grid(row=row, column=1, padx=10, pady=5, sticky="e")
+            styles.entry_style(self.strength_entry)
             row += 1
 
             # Button for saving changes
             save_button = tk.Button(self.input_frame, text="Рассчитать", command=self.save_params)
             save_button.grid(row=row, column=0, columnspan=2, pady=10)
+            styles.choice_button_styles(save_button)
 
 
     def save_params(self):
@@ -169,7 +204,11 @@ class AppInterface:
             widget.destroy()
 
         print(self.strength_limit)
-        results = execute_with_updated_config(self.ansys_executor_path, self.ansys_project_path)
+        results = execute_with_updated_config(
+            self.ansys_executor_path,
+            self.ansys_project_path,
+            self.ansys_result_path,
+            )
 
 
         print(results)
@@ -180,6 +219,7 @@ class AppInterface:
             for key, value in results.items():
                 label = tk.Label(self.input_frame, text=f"{key}: {value}")
                 label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+                styles.label_style(label)
                 row += 1
             try:
                 stress = float(results["P2"])
@@ -202,11 +242,13 @@ class AppInterface:
                 # Вывод коэффициента запаса
                 label = tk.Label(self.input_frame, text=f"Коэффициент запаса: {safety_factor:.2f}")
                 label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+                styles.label_style(label)
                 row += 1
 
                 # Вывод категории
                 category_label = tk.Label(self.input_frame, text=f"Категория: {category}")
                 category_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+                styles.label_style(category_label)
                 row += 1
                 
             except ValueError:

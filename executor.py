@@ -1,5 +1,6 @@
 import subprocess
 import csv
+import re
 
 
 class Executor:
@@ -23,9 +24,7 @@ class Executor:
             print(f"Error {e}")
 
 
-def execute_with_updated_config(ansys_executor_path, ansys_project_path):
-    # executor = Executor(r"E:\Ansys Inc\v241\Framework\bin\Win64\RunWB2.exe", r"C:\Users\Lenar\AnsysProjects\pipe_3.wbpj")
-    # executor = Executor(executor_path, r"C:\Users\Lenar\AnsysProjects\pipe_3.wbpj")
+def execute_with_updated_config(ansys_executor_path, ansys_project_path, ansys_result_path):
     executor = Executor(ansys_executor_path, ansys_project_path)
 
     try:
@@ -35,7 +34,9 @@ def execute_with_updated_config(ansys_executor_path, ansys_project_path):
     except Exception as e:
         print("Error", e)
 
-    with open(r"C:\Users\Lenar\AnsysProjects\pipe_script_csv.csv", "r", encoding="utf-8") as file:
+
+    with open(ansys_result_path, "r", encoding='utf-8') as file: 
+        
         reader = csv.reader(file, delimiter="\t")
         data = []
         print(reader)
