@@ -1,17 +1,22 @@
 import tkinter as tk
+from tkinter import ttk
 import styles
 from PIL import Image, ImageTk
 
 
 from tkinter import filedialog
-from services import get_params_from_config, create_new_config
+from services import get_params_from_config, create_new_config, get_needed_param_value
 from executor import execute_with_updated_config
 from regex import pattern_for_saving_path
+from csv_parse import parse_result
 
 
 class AppInterface:
     def __init__(self, root):
-        # Main Frame Setup 
+        """
+        App Setup
+        Начальная настройка окна и его параметров 
+        """
         self.root = root
         self.root.title("AnsysAutomatization")
         self.root.geometry("1920x1080")
@@ -26,18 +31,19 @@ class AppInterface:
         self.right_frame = tk.Frame(self.root, bg="white")
         self.right_frame.pack(side="left", fill="both", expand=True)
 
+        # Frame for input fields
         self.input_frame = tk.Frame(self.right_frame, bg="white")
         self.input_frame.place(relx=0.5, rely=0.5, anchor="center")
         
+        # Picture
         image = Image.open("static/pic.jpg")
         photo = ImageTk.PhotoImage(image)
-
         self.image_label = tk.Label(self.right_frame, image=photo, bg='white')
         self.image_label.image = photo
         self.image_label.pack(pady=100)
 
         
-        # Welcome Label
+        # Welcome page
         self.label = tk.Label(
             self.left_frame,
         text="Добро пожаловать в программу для автоматизации создания и запуска журналов Ansys INC \n\n Для начала потребуется выбрать проект, журнал проекта и путь до исполнителя",
@@ -49,6 +55,7 @@ class AppInterface:
             wraplength=600,
             )
         self.label.pack(pady=(0, 200), anchor="w")
+
 
         # Path to journal button 
         self.config_button = tk.Button(self.left_frame, text="📄 Выберите файл конфигурации",
@@ -69,6 +76,9 @@ class AppInterface:
         self.ansys_executor_path = None
         self.ansys_project_path = None
         self.ansys_result_path = None
+        self.result_tree = None
+        self.safety_factor_label = None
+        self.category_label = None
 
         # Config parameters dict
         self.params = dict | None
@@ -76,9 +86,24 @@ class AppInterface:
         self.strength_entry = None
 
     def on_button_click(self):
-        """ Saving choosen config file """
+        """ 
+        Saving choosen config file 
+        Сохранение выбранного конфига
+        """
         file_path = filedialog.askopenfilename()
 
+        # Desctroying old params
+        for widget in self.input_frame.winfo_children():
+            widget.destroy()
+
+        if self.result_tree:
+            self.result_tree.destroy()
+        
+        if self.safety_factor_label and self.category_label:
+            self.safety_factor_label.destroy()
+            self.category_label.destroy()
+
+        # Getting new journal
         if file_path:
             with open(file_path, mode="r", encoding="utf-8") as file:
                 working_config = file.read()
@@ -108,7 +133,10 @@ class AppInterface:
                 tk.messagebox.showerror("Ошибка", str(e))
         
     def get_executor_path(self):
-        """ Saving path to executor """
+        """ 
+        Saving path to executor
+        Сохранение пути до файла исполнителя
+        """
         file_path = filedialog.askopenfilename()
         
         if file_path:
@@ -119,7 +147,11 @@ class AppInterface:
         print(self.ansys_executor_path)
 
     def get_project_path(self):
-        """ Getting project path """
+        """ 
+        Getting project path
+        Сохранение пути до файла проекта
+        """
+        
         project_path = filedialog.askopenfilename()
         if project_path:
             self.ansys_project_path = project_path
@@ -130,7 +162,10 @@ class AppInterface:
 
 
     def create_input_fields(self):
-        """ Creating a input fields which depending on config """
+        """ 
+        Creating a input fields which depending on config
+        Создание полей ввода на основе конфига
+        """
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
@@ -156,6 +191,7 @@ class AppInterface:
                 self.entries[key] = entry
                 row += 1
 
+            # Addind field for input strength limit
             self.strength_label = tk.Label(self.input_frame, text="Предел прочности")
             self.strength_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
             styles.label_style(self.strength_label)
@@ -172,7 +208,10 @@ class AppInterface:
 
 
     def save_params(self):
-        """ Function for updating and creating a new config """
+        """
+        Function for updating and creating a new config
+        Обновляет сохраненный конфиг с параметрами введеными пользователем
+        """
         if isinstance(self.params, dict):
             for key, entry in self.entries.items():
                 self.params[key] = entry.get()
@@ -194,65 +233,62 @@ class AppInterface:
         self.show_results()
     
     def show_results(self):
+        """
+        Show table with data and strength limit
+        Выводит таблицу и показания предела прочности
+        """
         if not self.ansys_executor_path:
             tk.messagebox.showerror("Ошибка", "Выберите файл испонитель")
             return
+
         if not self.ansys_project_path:
             tk.messagebox.showerror("Ошибка", "Выберите файл проекта")
 
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
-        print(self.strength_limit)
-        results = execute_with_updated_config(
-            self.ansys_executor_path,
-            self.ansys_project_path,
-            self.ansys_result_path,
+        try:
+            execute_with_updated_config(
+                self.ansys_executor_path,
+                self.ansys_project_path,
+                self.ansys_result_path,
             )
-
-
-        print(results)
+        except Exception as e:
+            print(f"ERROR: {Exception}")
         
-        if isinstance(results, dict) and "P2" in results:
-           
-            row = 0
-            for key, value in results.items():
-                label = tk.Label(self.input_frame, text=f"{key}: {value}")
-                label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
-                styles.label_style(label)
-                row += 1
-            try:
-                stress = float(results["P2"])
-                safety_factor = self.strength_limit / stress if stress != 0 else float('inf')
+        fields, rows = parse_result(self.ansys_result_path)
+        self.result_tree = ttk.Treeview(self.right_frame)
+        styles.result_treeview(self.result_tree, fields, rows)
 
-                # Определяем категорию
-                if safety_factor < 1:
-                    category = "Гарантированное разрушение"
-                elif 1 <= safety_factor < 1.5:
-                    category = "Локальные повреждения, усталостные трещины"
-                elif 1.5 <= safety_factor < 2:
-                    category = "Допустимо для неответственных деталей"
-                elif 2 <= safety_factor < 3:
-                    category = "Оптимальный запас прочности"
-                elif 3 <= safety_factor <= 5:
-                    category = "Повышенный запас прочности"
-                else:
-                    category = "Перерасход материала"
+        try:
+            stress = float(get_needed_param_value(rows))
+            print(stress)
+            safety_factor = self.strength_limit / stress if stress != 0 else float('inf')
 
-                # Вывод коэффициента запаса
-                label = tk.Label(self.input_frame, text=f"Коэффициент запаса: {safety_factor:.2f}")
-                label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
-                styles.label_style(label)
-                row += 1
+            # Определяем категорию
+            if safety_factor < 1:
+                category = "Гарантированное разрушение"
+            elif 1 <= safety_factor < 1.5:
+                category = "Локальные повреждения, усталостные трещины"
+            elif 1.5 <= safety_factor < 2:
+                category = "Допустимо для неответственных деталей"
+            elif 2 <= safety_factor < 3:
+                category = "Оптимальный запас прочности"
+            elif 3 <= safety_factor <= 5:
+                category = "Повышенный запас прочности"
+            else:
+                category = "Перерасход материала"
 
-                # Вывод категории
-                category_label = tk.Label(self.input_frame, text=f"Категория: {category}")
-                category_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
-                styles.label_style(category_label)
-                row += 1
-                
-            except ValueError:
-                tk.messagebox.showerror("Ошибка", "Некорректные введеные данные")
+            # Вывод коэффициента запаса
+            # Создаем и упаковываем метки под таблицей
+            self.safety_factor_label = tk.Label(self.right_frame, text=f"Коэффициент запаса: {safety_factor:.2f}")
+            styles.label_style(self.safety_factor_label)
+            self.safety_factor_label.pack(anchor='center', padx=10, pady=(5, 0))
+
+            self.category_label = tk.Label(self.right_frame, text=f"Категория: {category}")
+            styles.label_style(self.category_label)
+            self.category_label.pack(anchor='center', padx=10, pady=(0, 10))
+
             
-        else:
-            tk.messagebox.showerror("Ошибка", "Результаты не получены или имеют некорректный формат")
+        except ValueError:
+            tk.messagebox.showerror("Ошибка", "Некорректные введеные данные")

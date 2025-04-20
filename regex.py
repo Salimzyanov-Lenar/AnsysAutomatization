@@ -11,7 +11,5 @@ pattern_for_variables = re.compile(r'Variables=\["(.*?)"\],\s*Values=\[\["(.*?)"
 # Expression = "15 [MPa]")
 pattern_for_params = re.compile(r'Parameter=(\w+),\s*Expression="(.*?)"')
 
-
-
 # Saving path regex
 pattern_for_saving_path = re.compile(r'FilePath="([^"]+\.csv)"')
