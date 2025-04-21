@@ -22,7 +22,6 @@ class AppInterface:
         self.root.geometry("1920x1080")
         self.root.configure(bg="white")
 
-
         # Left Frame
         self.left_frame = tk.Frame(self.root, bg="#1729B0", width=200)
         self.left_frame.pack(side="left", fill="y")
@@ -32,16 +31,23 @@ class AppInterface:
         self.right_frame.pack(side="left", fill="both", expand=True)
 
         # Frame for input fields
-        self.input_frame = tk.Frame(self.right_frame, bg="white")
+        self.input_frame = tk.Frame(self.right_frame, bg="#1729B0")
         self.input_frame.place(relx=0.5, rely=0.5, anchor="center")
-        
+ 
+        # Logo
+        uni_logo = Image.open("static/logo.jpg")
+        uni_logo.resize((10, 5),)
+        logo = ImageTk.PhotoImage(uni_logo)
+        self.logo_label = tk.Label(self.right_frame, image=logo, bg='white')
+        self.logo_label.image = logo
+        self.logo_label.pack()       
+
         # Picture
         image = Image.open("static/pic.jpg")
         photo = ImageTk.PhotoImage(image)
         self.image_label = tk.Label(self.right_frame, image=photo, bg='white')
         self.image_label.image = photo
-        self.image_label.pack(pady=100)
-
+        self.image_label.pack(pady=30)
         
         # Welcome page
         self.label = tk.Label(
@@ -181,7 +187,7 @@ class AppInterface:
                 # label = tk.Label(self.input_frame, text=key)
                 label = tk.Label(self.input_frame, text=key)
                 styles.label_style(label)
-                label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+                label.grid(row=row, column=0, padx=10, pady=15, sticky="w")
 
                 entry = tk.Entry(self.input_frame)
                 styles.entry_style(entry)
@@ -193,7 +199,7 @@ class AppInterface:
 
             # Addind field for input strength limit
             self.strength_label = tk.Label(self.input_frame, text="Предел прочности")
-            self.strength_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+            self.strength_label.grid(row=row, column=0, padx=10, pady=15, sticky="w")
             styles.label_style(self.strength_label)
 
             self.strength_entry = tk.Entry(self.input_frame)
@@ -203,8 +209,8 @@ class AppInterface:
 
             # Button for saving changes
             save_button = tk.Button(self.input_frame, text="Рассчитать", command=self.save_params)
-            save_button.grid(row=row, column=0, columnspan=2, pady=10)
-            styles.choice_button_styles(save_button)
+            save_button.grid(row=row, column=0, columnspan=2, pady=25)
+            styles.calculate_button_styles(save_button)
 
 
     def save_params(self):
@@ -247,16 +253,19 @@ class AppInterface:
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
-        try:
-            execute_with_updated_config(
-                self.ansys_executor_path,
-                self.ansys_project_path,
-                self.ansys_result_path,
-            )
-        except Exception as e:
-            print(f"ERROR: {Exception}")
+        # try:
+        #     execute_with_updated_config(
+        #         self.ansys_executor_path,
+        #         self.ansys_project_path,
+        #         self.ansys_result_path,
+        #     )
+        # except Exception as e:
+        #     print(f"ERROR: {Exception}")
         
         fields, rows = parse_result(self.ansys_result_path)
+        fields = fields[1:]
+        rows = rows[3:]
+        rows = [row[1:] for row in rows]
         self.result_tree = ttk.Treeview(self.right_frame)
         styles.result_treeview(self.result_tree, fields, rows)
 

@@ -18,17 +18,37 @@ def choice_button_styles(button):
 
 def label_style(widget):
     widget.config(
-        font=('Arial', 16),
-        bg='#007ACC',
-        fg='white')
+        font=('Segoe UI', 14, 'bold'),
+        bg='#1729B0',  # чуть темнее, насыщенный синий
+        fg='white',
+    )
 
 def entry_style(widget):
     widget.config(
-        font=('Arial', 16),
-        bg='#f4f4f4',
+        font=('Segoe UI', 14),
+        bg='white',  # светло-серый фон
+        fg='black',  # темно-серый текст
+        relief='flat',  # более современный вид без рамки
+        bd=0,
+        highlightthickness=2,
+        highlightbackground='#cccccc',  # светлая рамка
+        highlightcolor='#007ACC',  # цвет рамки при фокусе
+        insertbackground='#007ACC',  # цвет курсора
+    )
+
+def calculate_button_styles(button):
+    """ Стили для кнопок выбора путей """
+    button.configure(
+        bg='white',
         fg='black',
-        relief='solid',
-        bd=1)
+        font=('Arial', 13, 'bold'),
+        padx=10,
+        pady=6,
+        bd=0,
+        activebackground='#005A9E',
+        activeforeground='white',
+        cursor='hand2'
+    )
 
 def result_treeview(tree: ttk.Treeview, fields: list, rows: list):
     """ 
@@ -38,23 +58,34 @@ def result_treeview(tree: ttk.Treeview, fields: list, rows: list):
     style = ttk.Style()
     style.theme_use("default")
 
-    # Стили для основного отображения
+    # Основной стиль таблицы
     style.configure("Treeview",
-                    font=('Arial', 14),
-                    rowheight=25,
-                    borderwidth=1,
-                    relief="solid")
+                    font=('Segoe UI', 16),
+                    rowheight=28,
+                    borderwidth=0,
+                    relief="flat",
+                    background="#f9f9f9",
+                    foreground="#333333",
+                    fieldbackground="#f9f9f9")
 
-    # Стили для заголовков
+    # Стиль заголовков
     style.configure("Treeview.Heading",
-                    font=('Arial', 13,),
-                    background="white",
-                    relief="raised")
+                    font=('Segoe UI', 16, 'bold'),
+                    background="#1729B0",
+                    foreground="white",
+                    relief="flat")
 
-    # Цвет строк
-    style.map("Treeview", background=[('selected', '#007acc')])
-    style.configure("EvenRow", background="#ffffff")
-    style.configure("OddRow", background="#f2f2f2")
+    style.map("Treeview.Heading",
+              background=[('active', '#005A9E')])  # цвет при наведении на заголовок
+
+    # Цвета для строк (чередование)
+    style.configure("OddRow", background="#ffffff")
+    style.configure("EvenRow", background="#e6f0fa")
+
+    # Цвет выделенной строки
+    style.map("Treeview",
+              background=[('selected', '#1729B0')],
+              foreground=[('selected', 'white')])
 
     # Настройка колонок
     tree["columns"] = fields
@@ -62,10 +93,10 @@ def result_treeview(tree: ttk.Treeview, fields: list, rows: list):
 
     for field in fields:
         tree.heading(field, text=field)
-        tree.column(field, anchor="center", width=100)
+        tree.column(field, anchor="center", width=480)
 
     for i, row in enumerate(rows):
         tag = "EvenRow" if i % 2 == 0 else "OddRow"
         tree.insert("", "end", values=row, tags=(tag,))
     
-    tree.pack(fill="both",)
+    tree.pack(fill="y",)

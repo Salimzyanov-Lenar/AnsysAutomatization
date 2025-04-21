@@ -18,7 +18,7 @@ def parse_result(result_path):
     fields = [f"Col {i+1}" for i in range(max_cols)]
 
     # Дополняем короткие строки пустыми ячейками
-    for i in range(len(rows)):
+    for i in range(3, len(rows)):
         while len(rows[i]) < max_cols:
             rows[i].append("")
 
