@@ -147,9 +147,9 @@ class AppInterface:
         
         if file_path:
             self.ansys_executor_path = file_path
-
         else:
-            tk.messagebox.showerror("Ошибка, выберите валидный исполнительный файл Ansys")
+            self.ansys_executor_path = None
+
         print(self.ansys_executor_path)
 
     def get_project_path(self):
@@ -162,9 +162,8 @@ class AppInterface:
         if project_path:
             self.ansys_project_path = project_path
             self.label.config(text=f"Выбран путь:\n{project_path}")
-            
         else:
-            tk.messagebox.showerror("Ошибка, выбери валидный путь до проекта")
+            self.ansys_project_path = None
 
 
     def create_input_fields(self):
@@ -253,14 +252,14 @@ class AppInterface:
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
-        # try:
-        #     execute_with_updated_config(
-        #         self.ansys_executor_path,
-        #         self.ansys_project_path,
-        #         self.ansys_result_path,
-        #     )
-        # except Exception as e:
-        #     print(f"ERROR: {Exception}")
+        try:
+            execute_with_updated_config(
+                self.ansys_executor_path,
+                self.ansys_project_path,
+                self.ansys_result_path,
+            )
+        except Exception as e:
+            print(f"ERROR: {Exception}")
         
         fields, rows = parse_result(self.ansys_result_path)
         fields = fields[1:]
