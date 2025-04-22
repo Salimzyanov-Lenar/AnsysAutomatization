@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import ttk
 import styles
+
+
 from PIL import Image, ImageTk
-
-
+from tkinter import ttk
 from tkinter import filedialog
 from services import get_params_from_config, create_new_config, get_needed_param_value
 from executor import execute_with_updated_config
@@ -77,19 +77,20 @@ class AppInterface:
             styles.choice_button_styles(btn)
             btn.pack(fill="both", padx=10, pady=5)
 
-
         # App Setup parameters
         self.ansys_executor_path = None
         self.ansys_project_path = None
         self.ansys_result_path = None
-        self.result_tree = None
         self.safety_factor_label = None
         self.category_label = None
+        self.result_tree = None
+        self.table_container = None
 
         # Config parameters dict
         self.params = dict | None
         self.strength_limit = None
         self.strength_entry = None
+
 
     def on_button_click(self):
         """ 
@@ -102,7 +103,8 @@ class AppInterface:
         for widget in self.input_frame.winfo_children():
             widget.destroy()
 
-        if self.result_tree:
+        if self.result_tree and self.table_container:
+            self.table_container.destroy()
             self.result_tree.destroy()
         
         if self.safety_factor_label and self.category_label:
@@ -138,6 +140,7 @@ class AppInterface:
             except Exception as e:
                 tk.messagebox.showerror("Ошибка", str(e))
         
+
     def get_executor_path(self):
         """ 
         Saving path to executor
@@ -149,15 +152,15 @@ class AppInterface:
             self.ansys_executor_path = file_path
         else:
             self.ansys_executor_path = None
-
+        
         print(self.ansys_executor_path)
+
 
     def get_project_path(self):
         """ 
         Getting project path
         Сохранение пути до файла проекта
         """
-        
         project_path = filedialog.askopenfilename()
         if project_path:
             self.ansys_project_path = project_path
@@ -178,7 +181,6 @@ class AppInterface:
             return
 
         row = 0
-        # Links for input fields
         self.entries = {}
 
         if isinstance(self.params, dict):
@@ -220,7 +222,6 @@ class AppInterface:
         if isinstance(self.params, dict):
             for key, entry in self.entries.items():
                 self.params[key] = entry.get()
-        print(self.params)
 
         try:
             self.strength_limit = float(self.strength_entry.get())
@@ -237,6 +238,7 @@ class AppInterface:
         tk.messagebox.showinfo("Информация", "Параметры сохранены")
         self.show_results()
     
+
     def show_results(self):
         """
         Show table with data and strength limit
@@ -260,13 +262,15 @@ class AppInterface:
             )
         except Exception as e:
             print(f"ERROR: {Exception}")
+            tk.messagebox.showerror("Ошибка", "Перезапустите приложение")
         
         fields, rows = parse_result(self.ansys_result_path)
+        print(fields, rows, sep='\n\n')
         fields = fields[1:]
         rows = rows[3:]
         rows = [row[1:] for row in rows]
-        self.result_tree = ttk.Treeview(self.right_frame)
-        styles.result_treeview(self.result_tree, fields, rows)
+        print(fields, rows, sep='\n\n')
+        self.table_container, self.result_tree = styles.result_treeview(self.right_frame, fields, rows)
 
         try:
             stress = float(get_needed_param_value(rows))
@@ -297,6 +301,5 @@ class AppInterface:
             styles.label_style(self.category_label)
             self.category_label.pack(anchor='center', padx=10, pady=(0, 10))
 
-            
         except ValueError:
             tk.messagebox.showerror("Ошибка", "Некорректные введеные данные")

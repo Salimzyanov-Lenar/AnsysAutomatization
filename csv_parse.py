@@ -2,6 +2,9 @@ import csv
 
 
 def parse_result(result_path):
+    """
+    Парсит csv файл и возращает строки и столбцы
+    """
     rows = []
 
     # Читаем CSV
